@@ -2,28 +2,26 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>KBO LIVE & Ranking</title>
+    <title>Sports LIVE & KBO Rank</title>
     <style>
         body { background: #0d1117; color: white; font-family: 'Malgun Gothic', sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 20px; }
-        
-        /* 입력 영역 및 순위표 스타일 */
         #input-area { background: #161b22; padding: 25px; border-radius: 12px; border: 1px solid #30363d; margin-bottom: 20px; text-align: center; width: 450px; box-sizing: border-box; }
         input { padding: 10px; width: 220px; background: #0d1117; border: 1px solid #30363d; color: white; border-radius: 6px; outline: none; }
         .btn { padding: 10px 20px; background: #238636; border: none; color: white; border-radius: 6px; cursor: pointer; font-weight: bold; }
         
-        /* 순위표 디자인 */
+        /* 순위표 스타일 */
         .rank-table { width: 100%; margin-top: 20px; border-collapse: collapse; font-size: 13px; border-top: 1px solid #30363d; }
-        .rank-table th { padding: 10px 5px; color: #8b949e; border-bottom: 1px solid #30363d; }
+        .rank-table th { padding: 10px 5px; color: #8b949e; border-bottom: 1px solid #30363d; font-size: 11px; }
         .rank-table td { padding: 10px 5px; border-bottom: 1px solid #21262d; text-align: center; }
         .rank-highlight { color: #f1e05a; font-weight: bold; }
         .team-cell { text-align: left !important; display: flex; align-items: center; gap: 8px; }
-        .team-logo { width: 20px; height: 20px; }
+        .team-logo { width: 20px; height: 20px; border-radius: 50%; background: #fff; }
 
         /* 중계 화면 스타일 */
         #main-display { display: none; width: 450px; }
         .board { background: #161b22; padding: 30px; border-radius: 15px; border: 1px solid #30363d; text-align: center; margin-bottom: 15px; }
-        .score-row { display: flex; justify-content: space-between; align-items: center; font-size: 50px; font-weight: 800; }
-        .team { font-size: 22px; width: 110px; }
+        .score-row { display: flex; justify-content: space-between; align-items: center; font-size: 45px; font-weight: 800; }
+        .team { font-size: 20px; width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .cheer-box { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 20px; text-align: left; }
         .comment-item { font-size: 13px; padding: 8px 0; border-bottom: 1px solid #21262d; line-height: 1.4; }
     </style>
@@ -31,13 +29,13 @@
 <body>
 
     <div id="input-area">
-        <h2 style="font-size:18px; margin:0 0 15px 0;">⚾ 2026 KBO LIVE</h2>
+        <h2 style="font-size:18px; margin:0 0 15px 0;">🏆 Sports LIVE Terminal</h2>
         <div style="display:flex; gap:5px; justify-content:center; margin-bottom:20px;">
-            <input type="text" id="gameId" placeholder="경기 ID 입력" value="20260402OBSS02026">
-            <button class="btn" onclick="startApp()">중계 시작</button>
+            <input type="text" id="gameId" placeholder="경기 ID (KBO, 축구, 배구 등)" value="20260402OBSS02026">
+            <button class="btn" onclick="startApp()">시작</button>
         </div>
 
-        <h3 style="font-size:14px; text-align:left; color:#58a6ff; margin:0;">🏆 실시간 팀 순위</h3>
+        <h3 style="font-size:13px; text-align:left; color:#58a6ff; margin:0;">📊 KBO 실시간 순위</h3>
         <table class="rank-table">
             <thead>
                 <tr>
@@ -45,28 +43,28 @@
                     <th>팀명</th>
                     <th>승률</th>
                     <th>게임차</th>
-                    <th>연승/패</th>
+                    <th>연속</th>
                 </tr>
             </thead>
             <tbody id="rank-tbody">
-                <tr><td colspan="5" style="color:#8b949e;">순위 데이터를 불러오는 중...</td></tr>
+                <tr><td colspan="5" style="color:#8b949e; padding:20px;">데이터를 불러오는 중...</td></tr>
             </tbody>
         </table>
     </div>
 
     <div id="main-display">
         <div class="board">
-            <div id="status" style="color:#f1e05a; margin-bottom:15px; font-weight:bold;">데이터 수신 중...</div>
+            <div id="status" style="color:#f1e05a; margin-bottom:15px; font-weight:bold; font-size:14px;">데이터 수신 중...</div>
             <div class="score-row">
-                <div id="awayName" class="team">-</div>
+                <div id="awayName" class="team">Away</div>
                 <div id="awayScore">0</div>
-                <div style="color:#30363d">:</div>
+                <div style="color:#30363d; font-size:30px;">vs</div>
                 <div id="homeScore">0</div>
-                <div id="homeName" class="team">-</div>
+                <div id="homeName" class="team">Home</div>
             </div>
         </div>
-        <div class="cheer-box" id="comments-list">
-            <div style="color:#58a6ff; font-weight:bold; margin-bottom:10px;">📢 실시간 응원톡</div>
+        <div class="cheer-box">
+            <div style="color:#58a6ff; font-weight:bold; margin-bottom:10px; font-size:14px;">📢 실시간 응원톡</div>
             <div id="inner-list">응원 로딩 중...</div>
         </div>
     </div>
@@ -74,40 +72,43 @@
     <script>
         const GAS_URL = "https://script.google.com/macros/s/AKfycby8KNhjv8IxbTMCr86GjyaG8KsOG_e0wUp2XVX6wGjYKCN34VtkYdL7OPz-Xyp1hOC0/exec";
 
-        // 페이지 로드 시 순위표를 먼저 가져옵니다.
         window.onload = fetchRanking;
 
         async function fetchRanking() {
-            const rankApi = "https://api-gw.sports.naver.com/record/kbo/teamRank"; // 순위 API 주소
+            const rankApi = "https://api-gw.sports.naver.com/record/kbo/teamRank";
+            const tbody = document.getElementById('rank-tbody');
             try {
-                const response = await fetch(`${GAS_URL}?url=${encodeURIComponent(rankApi)}`);
-                const data = await response.json();
-                const ranks = data.result.teamRankList;
+                const res = await fetch(`${GAS_URL}?url=${encodeURIComponent(rankApi)}`);
+                const data = await res.json();
                 
-                const tbody = document.getElementById('rank-tbody');
-                tbody.innerHTML = '';
+                // 네이버 API 구조 대응 (result.teamRankList)
+                const list = data.result ? data.result.teamRankList : null;
+                if (!list) throw new Error("No Data");
 
-                ranks.forEach(team => {
+                tbody.innerHTML = '';
+                list.forEach(item => {
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
-                        <td class="rank-highlight">${team.rank}</td>
+                        <td class="rank-highlight">${item.rank}</td>
                         <td class="team-cell">
-                            <img src="https://sports-phinf.pstatic.net/team/kbo/default/${team.teamCode}.png" class="team-logo">
-                            ${team.teamName}
+                            <img src="https://sports-phinf.pstatic.net/team/kbo/default/${item.teamCode}.png" class="team-logo" onerror="this.style.display='none'">
+                            ${item.teamName}
                         </td>
-                        <td>${team.wra}</td>
-                        <td>${team.gameBehind}</td>
-                        <td>${team.continuousGameResult}</td>
+                        <td>${item.wra}</td>
+                        <td>${item.gameBehind}</td>
+                        <td>${item.continuousGameResult}</td>
                     `;
                     tbody.appendChild(tr);
                 });
             } catch (e) {
-                document.getElementById('rank-tbody').innerHTML = '<tr><td colspan="5">순위 정보를 가져오지 못했습니다.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="5" style="color:#ff7b72;">순위표 로드 실패</td></tr>';
             }
         }
 
         async function updateAll(id) {
+            // 모든 종목 공용 폴링 API
             const scoreUrl = `https://api-gw.sports.naver.com/schedule/games/${id}/game-polling?t=${Date.now()}`;
+            // 응원톡 API (ticket 파라미터는 보통 sportscheer로 통합됨)
             const cheerUrl = `https://apis.naver.com/commentBox/cbox/web_naver_list_jsonp.json?ticket=sportscheer&templateId=kbaseball_team&pool=cbox7&objectId=${id}&pageSize=5&page=1`;
 
             try {
@@ -119,7 +120,7 @@
                 const sData = await sRes.json();
                 const game = sData.result.game;
                 if (game) {
-                    document.getElementById('status').innerText = `[ ${game.statusInfo} ]`;
+                    document.getElementById('status').innerText = `[ ${game.statusInfo || '경기중'} ]`;
                     document.getElementById('awayName').innerText = game.awayTeamName;
                     document.getElementById('homeName').innerText = game.homeTeamName;
                     document.getElementById('awayScore').innerText = game.awayTeamScore;
@@ -130,15 +131,19 @@
                 const jsonStr = cText.substring(cText.indexOf('(') + 1, cText.lastIndexOf(')'));
                 const cData = JSON.parse(jsonStr);
                 const listEl = document.getElementById('inner-list');
-                listEl.innerHTML = '';
-                cData.result.commentList.slice(0, 4).forEach(c => {
-                    listEl.innerHTML += `<div class="comment-item"><b>${c.userName}</b>: ${c.contents}</div>`;
-                });
-            } catch (e) { console.error(e); }
+                
+                if (cData.result.commentList) {
+                    listEl.innerHTML = '';
+                    cData.result.commentList.slice(0, 4).forEach(c => {
+                        listEl.innerHTML += `<div class="comment-item"><b>${c.userName}</b>: ${c.contents}</div>`;
+                    });
+                }
+            } catch (e) { console.error("Update Error:", e); }
         }
 
         function startApp() {
             const id = document.getElementById('gameId').value.trim();
+            if (!id) return;
             document.getElementById('input-area').style.display = 'none';
             document.getElementById('main-display').style.display = 'block';
             updateAll(id);
