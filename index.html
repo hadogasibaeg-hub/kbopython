@@ -2,12 +2,24 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>SPORTS LIVE APP</title>
+    <title>KBO LIVE & Ranking</title>
     <style>
-        body { background: #0d1117; color: white; font-family: 'Malgun Gothic', sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
-        #input-area { background: #161b22; padding: 25px; border-radius: 12px; border: 1px solid #30363d; margin-bottom: 20px; text-align: center; }
-        input { padding: 10px; width: 250px; background: #0d1117; border: 1px solid #30363d; color: white; border-radius: 6px; outline: none; }
-        .btn { padding: 10px 20px; background: #238636; border: none; color: white; border-radius: 6px; cursor: pointer; font-weight: bold; margin-left: 5px; }
+        body { background: #0d1117; color: white; font-family: 'Malgun Gothic', sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 20px; }
+        
+        /* 입력 영역 및 순위표 스타일 */
+        #input-area { background: #161b22; padding: 25px; border-radius: 12px; border: 1px solid #30363d; margin-bottom: 20px; text-align: center; width: 450px; box-sizing: border-box; }
+        input { padding: 10px; width: 220px; background: #0d1117; border: 1px solid #30363d; color: white; border-radius: 6px; outline: none; }
+        .btn { padding: 10px 20px; background: #238636; border: none; color: white; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        
+        /* 순위표 디자인 */
+        .rank-table { width: 100%; margin-top: 20px; border-collapse: collapse; font-size: 13px; border-top: 1px solid #30363d; }
+        .rank-table th { padding: 10px 5px; color: #8b949e; border-bottom: 1px solid #30363d; }
+        .rank-table td { padding: 10px 5px; border-bottom: 1px solid #21262d; text-align: center; }
+        .rank-highlight { color: #f1e05a; font-weight: bold; }
+        .team-cell { text-align: left !important; display: flex; align-items: center; gap: 8px; }
+        .team-logo { width: 20px; height: 20px; }
+
+        /* 중계 화면 스타일 */
         #main-display { display: none; width: 450px; }
         .board { background: #161b22; padding: 30px; border-radius: 15px; border: 1px solid #30363d; text-align: center; margin-bottom: 15px; }
         .score-row { display: flex; justify-content: space-between; align-items: center; font-size: 50px; font-weight: 800; }
@@ -19,47 +31,91 @@
 <body>
 
     <div id="input-area">
-        <h2 style="font-size:16px; margin-top:0;">네이버 스포츠 경기 ID를 넣으십시오.</h2>
-        <input type="text" id="gameId" placeholder="예: 20260402OBSS02026" value="20260402OBSS02026">
-        <button class="btn" onclick="startApp()">중계 시작</button>
+        <h2 style="font-size:18px; margin:0 0 15px 0;">⚾ 2026 KBO LIVE</h2>
+        <div style="display:flex; gap:5px; justify-content:center; margin-bottom:20px;">
+            <input type="text" id="gameId" placeholder="경기 ID 입력" value="20260402OBSS02026">
+            <button class="btn" onclick="startApp()">중계 시작</button>
+        </div>
+
+        <h3 style="font-size:14px; text-align:left; color:#58a6ff; margin:0;">🏆 실시간 팀 순위</h3>
+        <table class="rank-table">
+            <thead>
+                <tr>
+                    <th>순위</th>
+                    <th>팀명</th>
+                    <th>승률</th>
+                    <th>게임차</th>
+                    <th>연승/패</th>
+                </tr>
+            </thead>
+            <tbody id="rank-tbody">
+                <tr><td colspan="5" style="color:#8b949e;">순위 데이터를 불러오는 중...</td></tr>
+            </tbody>
+        </table>
     </div>
 
     <div id="main-display">
         <div class="board">
             <div id="status" style="color:#f1e05a; margin-bottom:15px; font-weight:bold;">데이터 수신 중...</div>
             <div class="score-row">
-                <div id="awayName" class="team">원정</div>
+                <div id="awayName" class="team">-</div>
                 <div id="awayScore">0</div>
                 <div style="color:#30363d">:</div>
                 <div id="homeScore">0</div>
-                <div id="homeName" class="team">홈</div>
+                <div id="homeName" class="team">-</div>
             </div>
         </div>
-
-        <div class="cheer-box">
-            <div style="color:#58a6ff; font-weight:bold; margin-bottom:10px; font-size:14px;">📢 실시간 응원톡</div>
-            <div id="comments-list">
-                <div class="comment-item">응원 데이터를 불러오는 중...</div>
-            </div>
+        <div class="cheer-box" id="comments-list">
+            <div style="color:#58a6ff; font-weight:bold; margin-bottom:10px;">📢 실시간 응원톡</div>
+            <div id="inner-list">응원 로딩 중...</div>
         </div>
     </div>
 
     <script>
-        // 사용자님이 생성하신 구글 앱 스크립트 주소입니다.
         const GAS_URL = "https://script.google.com/macros/s/AKfycby8KNhjv8IxbTMCr86GjyaG8KsOG_e0wUp2XVX6wGjYKCN34VtkYdL7OPz-Xyp1hOC0/exec";
+
+        // 페이지 로드 시 순위표를 먼저 가져옵니다.
+        window.onload = fetchRanking;
+
+        async function fetchRanking() {
+            const rankApi = "https://api-gw.sports.naver.com/record/kbo/teamRank"; // 순위 API 주소
+            try {
+                const response = await fetch(`${GAS_URL}?url=${encodeURIComponent(rankApi)}`);
+                const data = await response.json();
+                const ranks = data.result.teamRankList;
+                
+                const tbody = document.getElementById('rank-tbody');
+                tbody.innerHTML = '';
+
+                ranks.forEach(team => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td class="rank-highlight">${team.rank}</td>
+                        <td class="team-cell">
+                            <img src="https://sports-phinf.pstatic.net/team/kbo/default/${team.teamCode}.png" class="team-logo">
+                            ${team.teamName}
+                        </td>
+                        <td>${team.wra}</td>
+                        <td>${team.gameBehind}</td>
+                        <td>${team.continuousGameResult}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (e) {
+                document.getElementById('rank-tbody').innerHTML = '<tr><td colspan="5">순위 정보를 가져오지 못했습니다.</td></tr>';
+            }
+        }
 
         async function updateAll(id) {
             const scoreUrl = `https://api-gw.sports.naver.com/schedule/games/${id}/game-polling?t=${Date.now()}`;
             const cheerUrl = `https://apis.naver.com/commentBox/cbox/web_naver_list_jsonp.json?ticket=sportscheer&templateId=kbaseball_team&pool=cbox7&objectId=${id}&pageSize=5&page=1`;
 
             try {
-                // 구글 프록시를 통해 데이터 호출
                 const [sRes, cRes] = await Promise.all([
                     fetch(`${GAS_URL}?url=${encodeURIComponent(scoreUrl)}`),
                     fetch(`${GAS_URL}?url=${encodeURIComponent(cheerUrl)}`)
                 ]);
 
-                // 1. 점수 정보 업데이트
                 const sData = await sRes.json();
                 const game = sData.result.game;
                 if (game) {
@@ -70,40 +126,23 @@
                     document.getElementById('homeScore').innerText = game.homeTeamScore;
                 }
 
-                // 2. 응원톡 업데이트 (JSONP 문자열 파싱)
                 const cText = await cRes.text();
-                const startIdx = cText.indexOf('(') + 1;
-                const endIdx = cText.lastIndexOf(')');
-                const jsonStr = cText.substring(startIdx, endIdx);
+                const jsonStr = cText.substring(cText.indexOf('(') + 1, cText.lastIndexOf(')'));
                 const cData = JSON.parse(jsonStr);
-                
-                const listEl = document.getElementById('comments-list');
+                const listEl = document.getElementById('inner-list');
                 listEl.innerHTML = '';
-                
-                if (cData.result.commentList && cData.result.commentList.length > 0) {
-                    cData.result.commentList.slice(0, 4).forEach(c => {
-                        const item = document.createElement('div');
-                        item.className = 'comment-item';
-                        item.innerHTML = `<span style="color:#8b949e; font-weight:bold;">${c.userName}</span>: ${c.contents}`;
-                        listEl.appendChild(item);
-                    });
-                } else {
-                    listEl.innerHTML = '<div class="comment-item">등록된 응원이 없습니다.</div>';
-                }
-
-            } catch (e) {
-                console.error("수신 오류:", e);
-                document.getElementById('status').innerText = "구글 서버 응답 대기 중...";
-            }
+                cData.result.commentList.slice(0, 4).forEach(c => {
+                    listEl.innerHTML += `<div class="comment-item"><b>${c.userName}</b>: ${c.contents}</div>`;
+                });
+            } catch (e) { console.error(e); }
         }
 
         function startApp() {
             const id = document.getElementById('gameId').value.trim();
-            if(!id) return;
             document.getElementById('input-area').style.display = 'none';
             document.getElementById('main-display').style.display = 'block';
             updateAll(id);
-            setInterval(() => updateAll(id), 5000); // 5초 간격 업데이트
+            setInterval(() => updateAll(id), 5000);
         }
     </script>
 </body>
