@@ -95,14 +95,14 @@
         </header>
 
         <div id="input-area">
-            <div class="section-title">🔍 ENTER GAME ID</div>
+            <div class="section-title">🔍 네이버 스포츠 경기 ID를 입력하십시오.</div>
             <div class="search-box">
                 <input type="text" id="gameId" placeholder="KBO, PL, NBA 등 경기 ID" value="20260402OBSS02026">
                 <button class="btn" onclick="startApp()">LIVE START</button>
             </div>
 
             <div class="rank-section">
-                <div class="section-title">📊 KBO LEAGUE RANKINGS</div>
+                <div class="section-title">📊 KBO 팀 순위</div>
                 <table class="rank-table">
                     <thead>
                         <tr>
@@ -125,26 +125,26 @@
                 <div id="status" class="match-status">CONNECTING...</div>
                 <div class="scoreboard">
                     <div class="score-team">
-                        <div id="awayName" class="name">AWAY</div>
+                        <div id="awayName" class="name">원정</div>
                     </div>
                     <div id="awayScore" class="score-number">0</div>
                     <div class="score-vs">VS</div>
                     <div id="homeScore" class="score-number">0</div>
                     <div class="score-team">
-                        <div id="homeName" class="name">HOME</div>
+                        <div id="homeName" class="name">홈</div>
                     </div>
                 </div>
             </div>
 
             <div class="chat-container">
-                <div class="section-title">📢 FAN CHEER</div>
-                <div id="inner-list" style="color:var(--text-dim); font-size:13px;">Waiting for messages...</div>
+                <div class="section-title">📢 응원글</div>
+                <div id="inner-list" style="color:var(--text-dim); font-size:13px;">잠시만 기다려주세요...</div>
             </div>
         </div>
     </div>
 
     <script>
-        const GAS_URL = "https://script.google.com/macros/s/AKfycby8KNhjv8IxbTMCr86GjyaG8KsOG_e0wUp2XVX6wGjYKCN34VtkYdL7OPz-Xyp1hOC0/exec";
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbwoN5T8Gwvj-oVnbwSzYZnPlmiRjyHMIx6SK7YPnB-P3eC6AYrUjTumZ5nWN5pIwIuM/exec";
 
         window.onload = fetchRanking;
 
