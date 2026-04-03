@@ -149,34 +149,35 @@
         window.onload = fetchRanking;
 
         async function fetchRanking() {
-            const rankApi = "https://api-gw.sports.naver.com/record/kbo/teamRank";
-            const tbody = document.getElementById('rank-tbody');
-            try {
-                const res = await fetch(`${GAS_URL}?url=${encodeURIComponent(rankApi)}`);
-                const data = await res.json();
-                const list = data.result ? data.result.teamRankList : null;
-                
-                if (!list) throw new Error();
-
-                tbody.innerHTML = '';
-                list.forEach(item => {
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td style="color:#f1e05a; font-weight:bold;">${item.rank}</td>
-                        <td class="team-name">
-                            <img src="https://sports-phinf.pstatic.net/team/kbo/default/${item.teamCode}.png" class="team-logo" onerror="this.style.display='none'">
-                            ${item.teamName}
-                        </td>
-                        <td>${item.wra}</td>
-                        <td>${item.gameBehind}</td>
-                        <td style="font-size:10px;">${item.continuousGameResult}</td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-            } catch (e) {
-                tbody.innerHTML = '<tr><td colspan="5" style="color:#ff7b72;">Unable to load rankings</td></tr>';
-            }
+    // ★ 중요: GAS가 KBO 크롤링 로직을 타도록 주소를 KBO 공식 사이트로 변경
+    const rankApi = "https://www.koreabaseball.com/Record/TeamRank/TeamRankDaily.aspx";
+    const tbody = document.getElementById('rank-tbody');
+    
+    try {
+        // GAS에 KBO 주소를 파라미터로 보냄
+        const res = await fetch(`${GAS_URL}?url=${encodeURIComponent(rankApi)}`);
+        const data = await res.json();
+        
+        // GAS가 리턴한 결과(result.teamRankList)를 화면에 출력
+        if (data.result && data.result.teamRankList) {
+            tbody.innerHTML = '';
+            data.result.teamRankList.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td style="color:#f1e05a; font-weight:bold;">${item.rank}</td>
+                    <td class="team-name" style="text-align:left; padding-left:15px;">${item.teamName}</td>
+                    <td>${item.wra}</td>
+                    <td>${item.gameBehind}</td>
+                    <td style="font-size:11px;">${item.continuousGameResult}</td>
+                `;
+                tbody.appendChild(tr);
+            });
         }
+    } catch (e) {
+        console.error("Ranking Error:", e);
+        tbody.innerHTML = '<tr><td colspan="5" style="color:#ff7b72;">공식 순위 데이터를 불러올 수 없습니다.</td></tr>';
+    }
+}
 
         async function updateAll(id) {
             const scoreUrl = `https://api-gw.sports.naver.com/schedule/games/${id}/game-polling?t=${Date.now()}`;
