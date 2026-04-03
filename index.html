@@ -23,15 +23,12 @@
             margin: 0; padding: 20px; min-height: 100vh;
         }
 
-        /* 공통 컨테이너 */
         .container { width: 100%; max-width: 480px; }
 
-        /* 헤더 스타일 */
         .app-header { text-align: center; margin-bottom: 25px; }
         .app-header h1 { font-size: 24px; color: white; margin: 0; letter-spacing: -0.5px; }
         .app-header p { font-size: 12px; color: var(--accent-color); margin: 5px 0 0; font-weight: bold; }
 
-        /* 입력창 영역 */
         #input-area { 
             background: var(--card-bg); padding: 20px; 
             border-radius: 12px; border: 1px solid var(--border-color);
@@ -49,7 +46,6 @@
             color: white; border-radius: 8px; cursor: pointer; font-weight: 600;
         }
 
-        /* 순위표 (KBO 전용 섹션) */
         .rank-section { margin-top: 25px; }
         .section-title { font-size: 13px; color: var(--text-dim); margin-bottom: 10px; display: flex; align-items: center; gap: 5px; }
         .rank-table { 
@@ -59,9 +55,7 @@
         .rank-table th { background: #21262d; padding: 10px; color: var(--text-dim); font-weight: 500; }
         .rank-table td { padding: 10px; border-bottom: 1px solid var(--border-color); text-align: center; }
         .team-name { text-align: left; display: flex; align-items: center; gap: 8px; font-weight: 600; }
-        .team-logo { width: 18px; height: 18px; }
 
-        /* 중계 대시보드 */
         #main-display { display: none; }
         .live-card { 
             background: var(--card-bg); padding: 30px 20px; 
@@ -78,7 +72,6 @@
         .score-number { font-size: 48px; font-weight: 800; color: white; width: 20%; }
         .score-vs { color: var(--border-color); font-size: 14px; font-weight: bold; }
 
-        /* 응원톡 */
         .chat-container { 
             background: var(--card-bg); border-radius: 12px; border: 1px solid var(--border-color); padding: 15px;
         }
@@ -149,83 +142,79 @@
         window.onload = fetchRanking;
 
         async function fetchRanking() {
-    // ★ 중요: GAS가 KBO 크롤링 로직을 타도록 주소를 KBO 공식 사이트로 변경
-    const rankApi = "https://www.koreabaseball.com/Record/TeamRank/TeamRankDaily.aspx";
-    const tbody = document.getElementById('rank-tbody');
-    
-    try {
-        // GAS에 KBO 주소를 파라미터로 보냄
-        const res = await fetch(`${GAS_URL}?url=${encodeURIComponent(rankApi)}`);
-        const data = await res.json();
-        
-        // GAS가 리턴한 결과(result.teamRankList)를 화면에 출력
-        if (data.result && data.result.teamRankList) {
-            tbody.innerHTML = '';
-            data.result.teamRankList.forEach(item => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td style="color:#f1e05a; font-weight:bold;">${item.rank}</td>
-                    <td class="team-name" style="text-align:left; padding-left:15px;">${item.teamName}</td>
-                    <td>${item.wra}</td>
-                    <td>${item.gameBehind}</td>
-                    <td style="font-size:11px;">${item.continuousGameResult}</td>
-                `;
-                tbody.appendChild(tr);
-            });
+            const rankApi = "https://www.koreabaseball.com/Record/TeamRank/TeamRankDaily.aspx";
+            const tbody = document.getElementById('rank-tbody');
+            
+            try {
+                const res = await fetch(`${GAS_URL}?url=${encodeURIComponent(rankApi)}`);
+                const data = await res.json();
+                
+                if (data.result && data.result.teamRankList) {
+                    tbody.innerHTML = '';
+                    data.result.teamRankList.forEach(item => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td style="color:#f1e05a; font-weight:bold;">${item.rank}</td>
+                            <td class="team-name" style="text-align:left; padding-left:15px;">${item.teamName}</td>
+                            <td>${item.wra}</td>
+                            <td>${item.gameBehind}</td>
+                            <td style="font-size:11px;">${item.continuousGameResult}</td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                }
+            } catch (e) {
+                console.error("Ranking Error:", e);
+                tbody.innerHTML = '<tr><td colspan="5" style="color:#ff7b72;">공식 순위 데이터를 불러올 수 없습니다.</td></tr>';
+            }
         }
-    } catch (e) {
-        console.error("Ranking Error:", e);
-        tbody.innerHTML = '<tr><td colspan="5" style="color:#ff7b72;">공식 순위 데이터를 불러올 수 없습니다.</td></tr>';
-    }
-}
 
         async function updateAll(id) {
-    // 1. 사용할 주소들을 먼저 변수로 정의합니다 (이게 없어서 에러가 난 것입니다)
-    const scoreUrl = `https://api-gw.sports.naver.com/schedule/games/${id}/game-polling?t=${Date.now()}`;
-    const cheerUrl = `https://apis.naver.com/commentBox/cbox/web_naver_list_jsonp.json?ticket=sportscheer&templateId=kbaseball_team&pool=cbox7&objectId=${id}&pageSize=5&page=1`;
+            const scoreUrl = `https://api-gw.sports.naver.com/schedule/games/${id}/game-polling?t=${Date.now()}`;
+            const cheerUrl = `https://apis.naver.com/commentBox/cbox/web_naver_list_jsonp.json?ticket=sportscheer&templateId=kbaseball_team&pool=cbox7&objectId=${id}&pageSize=5&page=1`;
 
-    try {
-        // 2. 정의된 주소를 사용하여 GAS에 요청을 보냅니다
-        const [sRes, cRes] = await Promise.all([
-            fetch(`${GAS_URL}?url=${encodeURIComponent(scoreUrl)}`),
-            fetch(`${GAS_URL}?url=${encodeURIComponent(cheerUrl)}`)
-        ]);
+            try {
+                const [sRes, cRes] = await Promise.all([
+                    fetch(`${GAS_URL}?url=${encodeURIComponent(scoreUrl)}`),
+                    fetch(`${GAS_URL}?url=${encodeURIComponent(cheerUrl)}`)
+                ]);
 
-        const sData = await sRes.json();
-        const game = sData.result.game;
-        
-        // 스코어 업데이트 로직
-        if (game) {
-            document.getElementById('status').innerText = game.statusInfo || 'LIVE';
-            document.getElementById('awayName').innerText = game.awayTeamName;
-            document.getElementById('homeName').innerText = game.homeTeamName;
-            document.getElementById('awayScore').innerText = game.awayTeamScore;
-            document.getElementById('homeScore').innerText = game.homeTeamScore;
+                const sData = await sRes.json();
+                const game = sData.result.game;
+                
+                if (game) {
+                    document.getElementById('status').innerText = game.statusInfo || 'LIVE';
+                    document.getElementById('awayName').innerText = game.awayTeamName;
+                    document.getElementById('homeName').innerText = game.homeTeamName;
+                    document.getElementById('awayScore').innerText = game.awayTeamScore;
+                    document.getElementById('homeScore').innerText = game.homeTeamScore;
+                }
+
+                const cText = await cRes.text();
+                const jsonStr = cText.substring(cText.indexOf('(') + 1, cText.lastIndexOf(')'));
+                const cData = JSON.parse(jsonStr);
+                const listEl = document.getElementById('inner-list');
+                
+                if (cData.result.commentList && cData.result.commentList.length > 0) {
+                    listEl.innerHTML = '';
+                    cData.result.commentList.slice(0, 5).forEach(c => {
+                        listEl.innerHTML += `<div class="chat-item"><span class="chat-user">${c.userName}</span> ${c.contents}</div>`;
+                    });
+                }
+            } catch (e) { 
+                console.error("Update Failed:", e); 
+            }
         }
 
-        // 응원톡 업데이트 로직 (JSONP 처리)
-        const cText = await cRes.text();
-        const jsonStr = cText.substring(cText.indexOf('(') + 1, cText.lastIndexOf(')'));
-        const cData = JSON.parse(jsonStr);
-        const listEl = document.getElementById('inner-list');
-        
-        if (cData.result.commentList && cData.result.commentList.length > 0) {
-            listEl.innerHTML = '';
-            cData.result.commentList.slice(0, 5).forEach(c => {
-                listEl.innerHTML += `<div class="chat-item"><span class="chat-user">${c.userName}</span> ${c.contents}</div>`;
-            });
-        }
-    } catch (e) { 
-        console.error("Update Failed:", e); 
-    }
-}
         function startApp() {
             const id = document.getElementById('gameId').value.trim();
             if (!id) return;
             document.getElementById('input-area').style.display = 'none';
             document.getElementById('main-display').style.display = 'block';
+            
             updateAll(id);
-            setInterval(() => updateAll(id), 5000);
+            // 3초 간격으로 실시간 데이터 업데이트
+            setInterval(() => updateAll(id), 3000); 
         }
     </script>
 </body>
