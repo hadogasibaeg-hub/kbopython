@@ -180,38 +180,23 @@
 }
 
         async function updateAll(id) {
-            const scoreUrl = `https://api-gw.sports.naver.com/schedule/games/${id}/game-polling?t=${Date.now()}`;
-            const cheerUrl = `https://apis.naver.com/commentBox/cbox/web_naver_list_jsonp.json?ticket=sportscheer&templateId=kbaseball_team&pool=cbox7&objectId=${id}&pageSize=5&page=1`;
-
-            try {
-                const [sRes, cRes] = await Promise.all([
-                    fetch(`${GAS_URL}?url=${encodeURIComponent(scoreUrl)}`),
-                    fetch(`${GAS_URL}?url=${encodeURIComponent(cheerUrl)}`)
-                ]);
-
-                const sData = await sRes.json();
-                const game = sData.result.game;
-                if (game) {
-                    document.getElementById('status').innerText = game.statusInfo || 'LIVE';
-                    document.getElementById('awayName').innerText = game.awayTeamName;
-                    document.getElementById('homeName').innerText = game.homeTeamName;
-                    document.getElementById('awayScore').innerText = game.awayTeamScore;
-                    document.getElementById('homeScore').innerText = game.homeTeamScore;
-                }
-
-                const cText = await cRes.text();
-                const jsonStr = cText.substring(cText.indexOf('(') + 1, cText.lastIndexOf(')'));
-                const cData = JSON.parse(jsonStr);
-                const listEl = document.getElementById('inner-list');
-                
-                if (cData.result.commentList && cData.result.commentList.length > 0) {
-                    listEl.innerHTML = '';
-                    cData.result.commentList.slice(0, 5).forEach(c => {
-                        listEl.innerHTML += `<div class="chat-item"><span class="chat-user">${c.userName}</span> ${c.contents}</div>`;
-                    });
-                }
-            } catch (e) { console.error("Poll Error:", e); }
-        }
+    // 3초마다 계속 실행되는 함수
+    try {
+        const [sRes, cRes] = await Promise.all([
+            fetch(`${GAS_URL}?url=${encodeURIComponent(scoreUrl)}`),
+            fetch(`${GAS_URL}?url=${encodeURIComponent(cheerUrl)}`)
+        ]);
+        
+        // 데이터가 없는 경우(응답 실패) 처리
+        if (!sRes.ok) throw new Error("Score API Error");
+        
+        // ... 기존 스코어/응원톡 처리 코드 ...
+        
+    } catch (e) {
+        console.error("Update Failed:", e);
+        // 여기서 3초마다 에러가 계속 찍히면, 잠시 주기를 늘리는 로직을 넣을 수도 있습니다.
+    }
+}
 
         function startApp() {
             const id = document.getElementById('gameId').value.trim();
