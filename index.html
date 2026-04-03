@@ -2,70 +2,144 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>Sports LIVE & KBO Rank</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SPORTS LIVE APP</title>
     <style>
-        body { background: #0d1117; color: white; font-family: 'Malgun Gothic', sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 20px; }
-        #input-area { background: #161b22; padding: 25px; border-radius: 12px; border: 1px solid #30363d; margin-bottom: 20px; text-align: center; width: 450px; box-sizing: border-box; }
-        input { padding: 10px; width: 220px; background: #0d1117; border: 1px solid #30363d; color: white; border-radius: 6px; outline: none; }
-        .btn { padding: 10px 20px; background: #238636; border: none; color: white; border-radius: 6px; cursor: pointer; font-weight: bold; }
-        
-        /* 순위표 스타일 */
-        .rank-table { width: 100%; margin-top: 20px; border-collapse: collapse; font-size: 13px; border-top: 1px solid #30363d; }
-        .rank-table th { padding: 10px 5px; color: #8b949e; border-bottom: 1px solid #30363d; font-size: 11px; }
-        .rank-table td { padding: 10px 5px; border-bottom: 1px solid #21262d; text-align: center; }
-        .rank-highlight { color: #f1e05a; font-weight: bold; }
-        .team-cell { text-align: left !important; display: flex; align-items: center; gap: 8px; }
-        .team-logo { width: 20px; height: 20px; border-radius: 50%; background: #fff; }
+        :root {
+            --bg-color: #0d1117;
+            --card-bg: #161b22;
+            --border-color: #30363d;
+            --accent-color: #58a6ff;
+            --success-color: #238636;
+            --text-main: #c9d1d9;
+            --text-dim: #8b949e;
+        }
 
-        /* 중계 화면 스타일 */
-        #main-display { display: none; width: 450px; }
-        .board { background: #161b22; padding: 30px; border-radius: 15px; border: 1px solid #30363d; text-align: center; margin-bottom: 15px; }
-        .score-row { display: flex; justify-content: space-between; align-items: center; font-size: 45px; font-weight: 800; }
-        .team { font-size: 20px; width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .cheer-box { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 20px; text-align: left; }
-        .comment-item { font-size: 13px; padding: 8px 0; border-bottom: 1px solid #21262d; line-height: 1.4; }
+        body { 
+            background: var(--bg-color); 
+            color: var(--text-main); 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            display: flex; flex-direction: column; align-items: center; 
+            margin: 0; padding: 20px; min-height: 100vh;
+        }
+
+        /* 공통 컨테이너 */
+        .container { width: 100%; max-width: 480px; }
+
+        /* 헤더 스타일 */
+        .app-header { text-align: center; margin-bottom: 25px; }
+        .app-header h1 { font-size: 24px; color: white; margin: 0; letter-spacing: -0.5px; }
+        .app-header p { font-size: 12px; color: var(--accent-color); margin: 5px 0 0; font-weight: bold; }
+
+        /* 입력창 영역 */
+        #input-area { 
+            background: var(--card-bg); padding: 20px; 
+            border-radius: 12px; border: 1px solid var(--border-color);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+        }
+
+        .search-box { display: flex; gap: 8px; margin-top: 15px; }
+        input { 
+            flex: 1; padding: 12px; background: var(--bg-color); 
+            border: 1px solid var(--border-color); color: white; 
+            border-radius: 8px; font-size: 14px;
+        }
+        .btn { 
+            padding: 0 20px; background: var(--success-color); border: none; 
+            color: white; border-radius: 8px; cursor: pointer; font-weight: 600;
+        }
+
+        /* 순위표 (KBO 전용 섹션) */
+        .rank-section { margin-top: 25px; }
+        .section-title { font-size: 13px; color: var(--text-dim); margin-bottom: 10px; display: flex; align-items: center; gap: 5px; }
+        .rank-table { 
+            width: 100%; border-collapse: collapse; font-size: 12px; 
+            background: var(--card-bg); border-radius: 8px; overflow: hidden;
+        }
+        .rank-table th { background: #21262d; padding: 10px; color: var(--text-dim); font-weight: 500; }
+        .rank-table td { padding: 10px; border-bottom: 1px solid var(--border-color); text-align: center; }
+        .team-name { text-align: left; display: flex; align-items: center; gap: 8px; font-weight: 600; }
+        .team-logo { width: 18px; height: 18px; }
+
+        /* 중계 대시보드 */
+        #main-display { display: none; }
+        .live-card { 
+            background: var(--card-bg); padding: 30px 20px; 
+            border-radius: 16px; border: 1px solid var(--border-color);
+            text-align: center; margin-bottom: 15px;
+        }
+        .match-status { 
+            display: inline-block; padding: 4px 12px; background: #30363d;
+            border-radius: 20px; font-size: 12px; color: #f1e05a; font-weight: bold; margin-bottom: 20px;
+        }
+        .scoreboard { display: flex; justify-content: space-between; align-items: center; }
+        .score-team { width: 35%; }
+        .score-team .name { font-size: 18px; font-weight: 700; margin-top: 10px; }
+        .score-number { font-size: 48px; font-weight: 800; color: white; width: 20%; }
+        .score-vs { color: var(--border-color); font-size: 14px; font-weight: bold; }
+
+        /* 응원톡 */
+        .chat-container { 
+            background: var(--card-bg); border-radius: 12px; border: 1px solid var(--border-color); padding: 15px;
+        }
+        .chat-item { padding: 10px 0; border-bottom: 1px solid #21262d; font-size: 13px; }
+        .chat-user { color: var(--accent-color); font-weight: bold; margin-right: 5px; }
     </style>
 </head>
 <body>
 
-    <div id="input-area">
-        <h2 style="font-size:18px; margin:0 0 15px 0;">🏆 Sports LIVE Terminal</h2>
-        <div style="display:flex; gap:5px; justify-content:center; margin-bottom:20px;">
-            <input type="text" id="gameId" placeholder="경기 ID (KBO, 축구, 배구 등)" value="20260402OBSS02026">
-            <button class="btn" onclick="startApp()">시작</button>
-        </div>
+    <div class="container">
+        <header class="app-header">
+            <h1>SPORTS LIVE APP</h1>
+            <p>REAL-TIME SCORE TERMINAL</p>
+        </header>
 
-        <h3 style="font-size:13px; text-align:left; color:#58a6ff; margin:0;">📊 KBO 실시간 순위</h3>
-        <table class="rank-table">
-            <thead>
-                <tr>
-                    <th>순위</th>
-                    <th>팀명</th>
-                    <th>승률</th>
-                    <th>게임차</th>
-                    <th>연속</th>
-                </tr>
-            </thead>
-            <tbody id="rank-tbody">
-                <tr><td colspan="5" style="color:#8b949e; padding:20px;">데이터를 불러오는 중...</td></tr>
-            </tbody>
-        </table>
-    </div>
+        <div id="input-area">
+            <div class="section-title">🔍 ENTER GAME ID</div>
+            <div class="search-box">
+                <input type="text" id="gameId" placeholder="KBO, PL, NBA 등 경기 ID" value="20260402OBSS02026">
+                <button class="btn" onclick="startApp()">LIVE START</button>
+            </div>
 
-    <div id="main-display">
-        <div class="board">
-            <div id="status" style="color:#f1e05a; margin-bottom:15px; font-weight:bold; font-size:14px;">데이터 수신 중...</div>
-            <div class="score-row">
-                <div id="awayName" class="team">Away</div>
-                <div id="awayScore">0</div>
-                <div style="color:#30363d; font-size:30px;">vs</div>
-                <div id="homeScore">0</div>
-                <div id="homeName" class="team">Home</div>
+            <div class="rank-section">
+                <div class="section-title">📊 KBO LEAGUE RANKINGS</div>
+                <table class="rank-table">
+                    <thead>
+                        <tr>
+                            <th>RK</th>
+                            <th>TEAM</th>
+                            <th>W%</th>
+                            <th>GB</th>
+                            <th>STRK</th>
+                        </tr>
+                    </thead>
+                    <tbody id="rank-tbody">
+                        <tr><td colspan="5" style="color:var(--text-dim); padding:20px;">Loading Rankings...</td></tr>
+                    </tbody>
+                </table>
             </div>
         </div>
-        <div class="cheer-box">
-            <div style="color:#58a6ff; font-weight:bold; margin-bottom:10px; font-size:14px;">📢 실시간 응원톡</div>
-            <div id="inner-list">응원 로딩 중...</div>
+
+        <div id="main-display">
+            <div class="live-card">
+                <div id="status" class="match-status">CONNECTING...</div>
+                <div class="scoreboard">
+                    <div class="score-team">
+                        <div id="awayName" class="name">AWAY</div>
+                    </div>
+                    <div id="awayScore" class="score-number">0</div>
+                    <div class="score-vs">VS</div>
+                    <div id="homeScore" class="score-number">0</div>
+                    <div class="score-team">
+                        <div id="homeName" class="name">HOME</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chat-container">
+                <div class="section-title">📢 FAN CHEER</div>
+                <div id="inner-list" style="color:var(--text-dim); font-size:13px;">Waiting for messages...</div>
+            </div>
         </div>
     </div>
 
@@ -80,35 +154,32 @@
             try {
                 const res = await fetch(`${GAS_URL}?url=${encodeURIComponent(rankApi)}`);
                 const data = await res.json();
-                
-                // 네이버 API 구조 대응 (result.teamRankList)
                 const list = data.result ? data.result.teamRankList : null;
-                if (!list) throw new Error("No Data");
+                
+                if (!list) throw new Error();
 
                 tbody.innerHTML = '';
                 list.forEach(item => {
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
-                        <td class="rank-highlight">${item.rank}</td>
-                        <td class="team-cell">
+                        <td style="color:#f1e05a; font-weight:bold;">${item.rank}</td>
+                        <td class="team-name">
                             <img src="https://sports-phinf.pstatic.net/team/kbo/default/${item.teamCode}.png" class="team-logo" onerror="this.style.display='none'">
                             ${item.teamName}
                         </td>
                         <td>${item.wra}</td>
                         <td>${item.gameBehind}</td>
-                        <td>${item.continuousGameResult}</td>
+                        <td style="font-size:10px;">${item.continuousGameResult}</td>
                     `;
                     tbody.appendChild(tr);
                 });
             } catch (e) {
-                tbody.innerHTML = '<tr><td colspan="5" style="color:#ff7b72;">순위표 로드 실패</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="5" style="color:#ff7b72;">Unable to load rankings</td></tr>';
             }
         }
 
         async function updateAll(id) {
-            // 모든 종목 공용 폴링 API
             const scoreUrl = `https://api-gw.sports.naver.com/schedule/games/${id}/game-polling?t=${Date.now()}`;
-            // 응원톡 API (ticket 파라미터는 보통 sportscheer로 통합됨)
             const cheerUrl = `https://apis.naver.com/commentBox/cbox/web_naver_list_jsonp.json?ticket=sportscheer&templateId=kbaseball_team&pool=cbox7&objectId=${id}&pageSize=5&page=1`;
 
             try {
@@ -120,7 +191,7 @@
                 const sData = await sRes.json();
                 const game = sData.result.game;
                 if (game) {
-                    document.getElementById('status').innerText = `[ ${game.statusInfo || '경기중'} ]`;
+                    document.getElementById('status').innerText = game.statusInfo || 'LIVE';
                     document.getElementById('awayName').innerText = game.awayTeamName;
                     document.getElementById('homeName').innerText = game.homeTeamName;
                     document.getElementById('awayScore').innerText = game.awayTeamScore;
@@ -132,13 +203,13 @@
                 const cData = JSON.parse(jsonStr);
                 const listEl = document.getElementById('inner-list');
                 
-                if (cData.result.commentList) {
+                if (cData.result.commentList && cData.result.commentList.length > 0) {
                     listEl.innerHTML = '';
-                    cData.result.commentList.slice(0, 4).forEach(c => {
-                        listEl.innerHTML += `<div class="comment-item"><b>${c.userName}</b>: ${c.contents}</div>`;
+                    cData.result.commentList.slice(0, 5).forEach(c => {
+                        listEl.innerHTML += `<div class="chat-item"><span class="chat-user">${c.userName}</span> ${c.contents}</div>`;
                     });
                 }
-            } catch (e) { console.error("Update Error:", e); }
+            } catch (e) { console.error("Poll Error:", e); }
         }
 
         function startApp() {
